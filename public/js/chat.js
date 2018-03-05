@@ -64,7 +64,7 @@ function loadOldMsg(){
   // var time=moment(this.firstMessagecreatedAt+' +0530','YYYY-MM-DD HH:mm:ss:SSS Z').toDate().toISOString();
   var params=jQuery.deparam(window.location.search);
   $.ajax({
-    url:'/loadmsg/?room='+params.room+'&mId='+this.firstMessageId,
+    url:'/loadmsg/?mId='+this.firstMessageId,
     type:'get',
     success:function(response){
       if(response.oldmsg.length<1){
@@ -106,7 +106,7 @@ socket.on('notifyUser', function(user){
     if(this.user!=user){
       $('#notifyUser').text(user + ' is typing ...');
     }
-    setTimeout(function(){ $('#notifyUser').text(''); }, 10000);;
+    setTimeout(function(){ $('#notifyUser').text(''); }, 2000);;
   });
 
 jQuery('#message-form').on('submit', function (e) {
@@ -134,6 +134,7 @@ socket.on('logout-response',(response)=>{
       var formattedTime = moment(response.message.createdAt).format('YYYY-MM-DD HH:mm');
       var template = jQuery('#message-template').html();
       var html = Mustache.render(template, {
+        id:response.message.id,
         text: response.message.text,
         from: response.message.from,
         createdAt: formattedTime

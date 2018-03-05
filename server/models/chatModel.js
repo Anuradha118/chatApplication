@@ -2,9 +2,9 @@ const mongoose=require('mongoose');
 const moment = require('moment');
 const schema = mongoose.Schema;  
 const chatSchema = new schema( {    
-    room: {
-        type:String 
-    },
+    // room: {
+    //     type:String 
+    // },
     userName: {
         type:String
     },
