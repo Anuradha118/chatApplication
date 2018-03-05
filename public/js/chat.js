@@ -106,7 +106,7 @@ socket.on('notifyUser', function(user){
     if(this.user!=user){
       $('#notifyUser').text(user + ' is typing ...');
     }
-    setTimeout(function(){ $('#notifyUser').text(''); }, 2000);;
+    setTimeout(function(){ $('#notifyUser').text(''); }, 2000);
   });
 
 jQuery('#message-form').on('submit', function (e) {
