@@ -1,6 +1,6 @@
 var socket = io();
 var user='';
-var firstMessagecreatedAt;
+// var firstMessagecreatedAt;
 var firstMessageId;
 function scrollToBottom () {
   // Selectors
