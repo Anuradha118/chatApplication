@@ -22,21 +22,23 @@ io.on('connection', (socket) => {
   console.log('New user connected');
   var message;
   var chat;
+  var room;
   socket.on('join', (params, callback) => {
     if (!isRealString(params.name)) {
-      return callback('Name is required.');
+      return callback('Name and room name are required.');
     }else if(users.getUserName(params.name)){
       return callback('User Name already taken');
     }
-    socket.join(socket.id);
+    var room=params.room.toLowerCase();
+    socket.join(room);
     users.removeUser(socket.id);
-    users.addUser(socket.id, params.name);
+    users.addUser(socket.id, params.name, room);
+    io.to(room).emit('updateUserList', users.getUserList(params.room));
     
-    io.emit('updateUserList', users.getUserList());
-    chat={userName:'Admin',text:`${params.name} has joined.`};
+    chat={userName:'Admin',room:room,text:`${params.name} has joined.`};
     chatManager.saveChat(chat,function(doc){
       message=generateMessage(doc._id,doc.userName,doc.text,doc.createdAt);
-      socket.broadcast.emit('newMessage', message);
+      socket.broadcast.to(room).emit('newMessage', message);
     });
     callback();
   });
@@ -44,11 +46,11 @@ io.on('connection', (socket) => {
   socket.on('createMessage', (message, callback) => {
     var user = users.getUser(socket.id);
     if (user && isRealString(message.text)) {
-       chat={userName:user.name,text:message.text};
+       chat={userName:user.name,room:user.room,text:message.text};
       
       chatManager.saveChat(chat,function(doc){
         message=generateMessage(doc._id,doc.userName,doc.text,doc.createdAt);
-        io.emit('newMessage', message);
+        io.to(user.room).emit('newMessage', message);
       });
     }
 
@@ -62,11 +64,11 @@ io.on('connection', (socket) => {
   socket.on('logout',(user)=>{
     var user=users.logoutUser(user);
     if(user){
-      io.emit('updateUserList', users.getUserList());
-      chat={userName:'Admin',text:`${user.name} has left.`};
+      io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+      chat={userName:'Admin',room:user.room,text:`${user.name} has left.`};
       chatManager.saveChat(chat,function(doc){
         message=generateMessage(doc._id,doc.userName,doc.text,doc.createdAt);
-      io.emit('logout-response',{user:user,error:false,message:message});  
+      io.to(user.room).emit('logout-response',{user:user,error:false,message:message});  
       });
       
     }
@@ -75,13 +77,12 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     var user = users.removeUser(socket.id);
-
     if (user) {
-      io.emit('updateUserList', users.getUserList());
-      chat={userName:'Admin',text:`${user.name} has left.`};
+      io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+      chat={userName:'Admin',room:user.room,text:`${user.name} has left.`};
       chatManager.saveChat(chat,function(doc){
         message=generateMessage(doc._id,doc.userName,doc.text,doc.createdAt);
-      io.emit('newMessage', message);
+      io.to(user.room).emit('newMessage', message);
       })
     }
   });
@@ -90,7 +91,10 @@ io.on('connection', (socket) => {
 app.get('/loadmsg/',function(req,res){
   // var filterdate=moment(req.query.createdAt,'YYYY-MM-DD HH:mm:ss:SSS Z').toDate().toISOString();
   // console.log(filterdate);
-  var data={mId:req.query.mId};
+  var data={
+    mId:req.query.mId,
+    room:req.query.room
+  }
   chatManager.getHistory(data,function(chats){
     res.send({'status':200,'oldmsg':chats});
   });
