@@ -93,8 +93,8 @@ app.get('/loadmsg/',function(req,res){
   // console.log(filterdate);
   var data={
     mId:req.query.mId,
-    room:req.query.room
-  }
+    room:req.query.room.toLowerCase()
+  };
   chatManager.getHistory(data,function(chats){
     res.send({'status':200,'oldmsg':chats});
   });
