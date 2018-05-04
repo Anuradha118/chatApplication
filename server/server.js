@@ -8,7 +8,7 @@ const {isRealString} = require('./utils/validation');
 const {Users} = require('./utils/users');
 const chatManager=require('./utils/chatManager');
 const publicPath = path.join(__dirname, '../public');
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 var {mongoose}=require('./db/mongoose');
 var app = express();
